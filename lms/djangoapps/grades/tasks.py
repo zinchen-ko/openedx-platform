@@ -39,7 +39,7 @@ from .transformer import GradesTransformer
 
 log = getLogger(__name__)
 
-COURSE_GRADE_TIMEOUT_SECONDS = 1200
+COURSE_GRADE_TIMEOUT_SECONDS = 5 # THIS IS A TEMP WAY TO MAKE THIS JOB FAIL TO EMPTY THE QUEUE
 KNOWN_RETRY_ERRORS = (  # Errors we expect occasionally, should be resolved on retry
     DatabaseError,
     ValidationError,
