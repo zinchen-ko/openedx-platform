@@ -97,7 +97,8 @@ def expected_error_exception_handler(exc, context):
     """
     # Call REST framework's default exception handler first to get the standard error response.
     response = exception_handler(exc, context)
-
+    msg = str(exc) + " " + str(context)
+    log.warn(str(msg))
     try:
         request = context['request'] if 'request' in context else None
     except TypeError:  # when context is not iterable

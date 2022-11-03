@@ -122,26 +122,26 @@ class TeamsDashboardView(GenericAPIView):
         Raises a 404 if the course specified by course_id does not exist, the
         user is not registered for the course, or the teams feature is not enabled.
         """
-        log.info("TeamsDashboardView.get()::125")
+        log.warn("TeamsDashboardView.get()::125")
         course_key = CourseKey.from_string(course_id)
-        log.info("TeamsDashboardView.get()::127")
+        log.warn("TeamsDashboardView.get()::127")
 
         course = get_course_with_access(request.user, "load", course_key)
-        log.info("TeamsDashboardView Loaded Course")
+        log.warn("TeamsDashboardView Loaded Course")
 
         if not is_feature_enabled(course):
             raise Http404
         
-        log.info("feature is enabled")
+        log.warn("feature is enabled")
         
         enrollment = CourseEnrollment.is_enrolled(request.user, course.id)
-        log.info(f"is enrolled {enrollment}")
+        log.warn(f"is enrolled {enrollment}")
         
         hacess = has_access(request.user, 'staff', course, course.id)
-        log.info(f"has access {hacess}")
+        log.warn(f"has access {hacess}")
 
         if not enrollment and not hacess:
-            log.info("raising 404")
+            log.warn("raising 404")
             raise Http404
 
         user = request.user
@@ -149,23 +149,23 @@ class TeamsDashboardView(GenericAPIView):
         # Even though sorting is done outside of the serializer, sort_order needs to be passed
         # to the serializer so that the paginated results indicate how they were sorted.
         sort_order = 'name'
-        log.info("1")
+        log.warn("1")
         topics = get_alphabetical_topics(course)
-        log.info("2")
+        log.warn("2")
         topics = _filter_hidden_private_teamsets(user, topics, course)
-        log.info("3")
+        log.warn("3")
         organization_protection_status = user_organization_protection_status(request.user, course_key)
-        log.info("4")
+        log.warn("4")
 
         # We have some frontend logic that needs to know if we have any open, public, or managed teamsets,
         # and it's easier to just figure that out here when we have them all already
         teamset_counts_by_type = Counter([topic['type'] for topic in topics])
-        log.info("5")
+        log.warn("5")
 
         # Paginate and serialize topic data
         # BulkTeamCountPaginatedTopicSerializer will add team counts to the topics in a single
         # bulk operation per page.
-        log.info("6")
+        log.warn("6")
         topics_data = self._serialize_and_paginate(
             TopicsPagination,
             topics,
@@ -176,7 +176,7 @@ class TeamsDashboardView(GenericAPIView):
                 'organization_protection_status': organization_protection_status
             },
         )
-        log.info("7")
+        log.warn("7")
         topics_data["sort_order"] = sort_order  # pylint: disable=unsupported-assignment-operation
 
         filter_query = {
@@ -186,9 +186,9 @@ class TeamsDashboardView(GenericAPIView):
         if organization_protection_status != OrganizationProtectionStatus.protection_exempt:
             is_user_org_protected = organization_protection_status == OrganizationProtectionStatus.protected
             filter_query['organization_protected'] = is_user_org_protected
-        log.info("8")
+        log.warn("8")
         user_teams = CourseTeam.objects.filter(**filter_query).order_by('-last_activity_at', 'team_size')
-        log.info("9")
+        log.warn("9")
         user_teams_data = self._serialize_and_paginate(
             MyTeamsPagination,
             user_teams,
@@ -196,11 +196,11 @@ class TeamsDashboardView(GenericAPIView):
             CourseTeamSerializer,
             {'expand': ('user',)}
         )
-        log.info("10")
+        log.warn("10")
         priv = has_discussion_privileges(user, course_key)
-        log.info("11")
+        log.warn("11")
         staccess = bool(has_access(user, 'staff', course_key))
-        log.info("12")
+        log.warn("12")
 
         context = {
             "course": course,
@@ -237,13 +237,13 @@ class TeamsDashboardView(GenericAPIView):
             "disable_courseware_js": True,
             "teams_base_url": reverse('teams_dashboard', request=request, kwargs={'course_id': course_id}),
         }
-        log.info("13")
+        log.warn("13")
         # Assignments are feature-flagged
         if are_team_submissions_enabled(course_key):
-            log.info("14")
+            log.warn("14")
             context["teams_assignments_url"] = reverse('teams_assignments_list', args=['team_id'])
 
-        log.info("15")
+        log.warn("15")
         return render(request, "teams/teams.html", context)
 
     def _serialize_and_paginate(self, pagination_cls, queryset, request, serializer_cls, serializer_ctx):
@@ -840,7 +840,7 @@ class TeamsDetailView(ExpandableFieldViewMixin, RetrievePatchAPIView):
 
         # Note: also deletes all team memberships associated with this team
         team.delete()
-        log.info('user %d deleted team %s', request.user.id, team_id)
+        log.warn('user %d deleted team %s', request.user.id, team_id)
         emit_team_event('edx.team.deleted', team.course_id, {
             'team_id': team_id,
         })

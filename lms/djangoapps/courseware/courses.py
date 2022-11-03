@@ -208,14 +208,14 @@ def check_course_access_with_redirect(course, user, action, check_if_enrolled=Fa
     """
     request = get_current_request()
     check_content_start_date_for_masquerade_user(course.id, user, request, course.start)
-    log.info("check_course_access_with_redirect: 1")
+    log.warn("check_course_access_with_redirect: 1")
     access_response = check_course_access(course, user, action, check_if_enrolled, check_survey_complete, check_if_authenticated)  # lint-amnesty, pylint: disable=line-too-long
-    log.info("check_course_access_with_redirect: 2")
-    log.info(f"check_course_access_with_redirect: {str(access_response)}")
+    log.warn("check_course_access_with_redirect: 2")
+    log.warn(f"check_course_access_with_redirect: {str(access_response)}")
 
     if not access_response:
         # Redirect if StartDateError
-        log.info("check_course_access_with_redirect: 3")
+        log.warn("check_course_access_with_redirect: 3")
         if isinstance(access_response, StartDateError):
             start_date = strftime_localized(course.start, 'SHORT_DATE')
             params = QueryDict(mutable=True)
@@ -225,7 +225,7 @@ def check_course_access_with_redirect(course, user, action, check_if_enrolled=Fa
                 params=params.urlencode()
             ), access_response)
 
-        log.info("check_course_access_with_redirect: 4")
+        log.warn("check_course_access_with_redirect: 4")
         # Redirect if AuditExpiredError
         if isinstance(access_response, AuditExpiredError):
             params = QueryDict(mutable=True)
@@ -234,7 +234,7 @@ def check_course_access_with_redirect(course, user, action, check_if_enrolled=Fa
                 dashboard_url=reverse('dashboard'),
                 params=params.urlencode()
             ), access_response)
-        log.info("check_course_access_with_redirect: 5")
+        log.warn("check_course_access_with_redirect: 5")
         # Redirect if trying to access an Old Mongo course
         if isinstance(access_response, OldMongoAccessError):
             params = QueryDict(mutable=True)
@@ -244,29 +244,29 @@ def check_course_access_with_redirect(course, user, action, check_if_enrolled=Fa
                 params=params.urlencode(),
             ), access_response)
 
-        log.info("check_course_access_with_redirect: 6")
+        log.warn("check_course_access_with_redirect: 6")
         # Redirect if the user must answer a survey before entering the course.
         if isinstance(access_response, MilestoneAccessError):
             raise CourseAccessRedirect('{dashboard_url}'.format(
                 dashboard_url=reverse('dashboard'),
             ), access_response)
 
-        log.info("check_course_access_with_redirect: 7")
+        log.warn("check_course_access_with_redirect: 7")
         # Redirect if the user is not enrolled and must be to see content
         if isinstance(access_response, EnrollmentRequiredAccessError):
             raise CourseAccessRedirect(reverse('about_course', args=[str(course.id)]))
 
-        log.info("check_course_access_with_redirect: 8")
+        log.warn("check_course_access_with_redirect: 8")
         # Redirect if user must be authenticated to view the content
         if isinstance(access_response, AuthenticationRequiredAccessError):
             raise CourseAccessRedirect(reverse('about_course', args=[str(course.id)]))
 
-        log.info("check_course_access_with_redirect: 9")
+        log.warn("check_course_access_with_redirect: 9")
         # Redirect if the user must answer a survey before entering the course.
         if isinstance(access_response, SurveyRequiredAccessError):
             raise CourseAccessRedirect(reverse('course_survey', args=[str(course.id)]))
 
-        log.info("check_course_access_with_redirect: 10")
+        log.warn("check_course_access_with_redirect: 10")
         # Deliberately return a non-specific error message to avoid
         # leaking info about access control settings
         raise CoursewareAccessException(access_response)
