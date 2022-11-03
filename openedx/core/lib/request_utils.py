@@ -98,7 +98,7 @@ def expected_error_exception_handler(exc, context):
     # Call REST framework's default exception handler first to get the standard error response.
     response = exception_handler(exc, context)
     msg = str(exc) + " " + str(context)
-    log.warn(str(msg))
+    print(str(msg))
     try:
         request = context['request'] if 'request' in context else None
     except TypeError:  # when context is not iterable
@@ -249,14 +249,14 @@ def _get_expected_error_settings_dict():
                 )
                 continue
             if ':' in module_and_class:
-                log.warning(
+                print(
                     "Replacing ':' with '.' in EXPECTED_ERRORS[%d]['MODULE_AND_CLASS'], which was set to %s. Note that "
                     "monitoring and logging will not include the ':'.",
                     index, module_and_class
                 )
                 module_and_class = module_and_class.replace(":", ".")
             if module_and_class in expected_error_settings_dict:
-                log.warning(
+                print(
                     "EXPECTED_ERRORS[%d] setting is overriding an earlier setting. 'MODULE_AND_CLASS' [%s] is defined "
                     "multiple times.",
                     index, module_and_class
@@ -321,7 +321,7 @@ def _log_and_monitor_expected_errors(request, exception, caller):
         # We will leave this attribute in place, but it is not worth investing in a workaround, especially given that
         # New Relic now offers its own expected error functionality, and this functionality may be simplified or removed.
         set_custom_attribute('unexpected_multiple_exceptions', cached_module_and_class)
-        log.warning(
+        print(
             "Unexpected scenario where different exceptions are handled by _log_and_monitor_expected_errors. "
             "See 'unexpected_multiple_exceptions' custom attribute. Skipping exception for %s.",
             module_and_class,
