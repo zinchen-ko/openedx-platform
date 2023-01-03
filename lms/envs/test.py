@@ -646,6 +646,21 @@ SAVE_FOR_LATER_EMAIL_RATE_LIMIT = '5/m'
 # Tests are not behind any proxies
 CLOSEST_CLIENT_IP_FROM_HEADERS = []
 
+################## Enrollment API ####################
+COURSE_ENROLLMENT_MODES['test'] = {
+    "id": 8,
+    "slug": u"test",
+    "display_name": u"Test",
+    "min_price": 0
+}
+
+COURSE_ENROLLMENT_MODES['test_mode'] = {
+    "id": 9,
+    "slug": u"test_mode",
+    "display_name": u"Test Mode",
+    "min_price": 0
+}
+
 
 COURSE_LIVE_GLOBAL_CREDENTIALS["BIG_BLUE_BUTTON"] = {
     "KEY": "***",

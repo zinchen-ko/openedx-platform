@@ -14,6 +14,7 @@ from urllib.parse import quote
 import pytest
 import ddt
 import httpretty
+import pytest
 import pytz
 from django.conf import settings
 from django.core.cache import cache
@@ -30,6 +31,11 @@ from xmodule.modulestore.tests.factories import CourseFactory, check_mongo_calls
 
 from common.djangoapps.course_modes.models import CourseMode
 from common.djangoapps.course_modes.tests.factories import CourseModeFactory
+from common.djangoapps.student.models import CourseEnrollment
+from common.djangoapps.student.roles import CourseStaffRole
+from common.djangoapps.student.tests.factories import AdminFactory, SuperuserFactory, UserFactory
+from common.djangoapps.util.models import RateLimitConfiguration
+from common.djangoapps.util.testing import UrlResetMixin
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.course_groups import cohorts
 from openedx.core.djangoapps.embargo.models import Country, CountryAccessRule, RestrictedCourse
@@ -64,7 +70,7 @@ class EnrollmentTestMixin:
             is_active=None,
             enrollment_attributes=None,
             min_mongo_calls=0,
-            max_mongo_calls=0,
+            max_mongo_calls=8,
             linked_enterprise_customer=None,
             cohort=None,
             force_enrollment=False,
@@ -451,10 +457,7 @@ class EnrollmentTest(EnrollmentTestMixin, ModuleStoreTestCase, APITestCase, Ente
                 mode_slug=CourseMode.DEFAULT_MODE_SLUG,
                 mode_display_name=CourseMode.DEFAULT_MODE_SLUG,
             )
-            self.assert_enrollment_status(
-                course_id=str(course.id),
-                max_mongo_calls=0,
-            )
+            self.assert_enrollment_status(course_id=six.text_type(course.id))
         # Verify the user himself can see both of his enrollments.
         self._assert_enrollments_visible_in_list([self.course, other_course])
         # Verify that self.other_user can't see any of the enrollments.

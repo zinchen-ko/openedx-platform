@@ -11,12 +11,16 @@ from crum import get_current_request
 from django.conf import settings
 from enterprise.models import EnterpriseCourseEnrollment, EnterpriseCustomerUser
 from pytz import UTC
+from xmodule.course_block import COURSE_VISIBILITY_PUBLIC
+from xmodule.util.xmodule_django import get_current_request_hostname
 
 from common.djangoapps.student.models import CourseEnrollment
 from common.djangoapps.student.roles import CourseBetaTesterRole
 from lms.djangoapps.courseware.access_response import (
     AccessResponse,
     AuthenticationRequiredAccessError,
+    EnrollmentRequiredAccessError,
+    StartDateError,
     DataSharingConsentRequiredAccessError,
     EnrollmentRequiredAccessError,
     IncorrectActiveEnterpriseAccessError,
@@ -75,7 +79,7 @@ def check_start_date(user, days_early_for_beta, start, course_key, display_error
     Returns:
         AccessResponse: Either ACCESS_GRANTED or StartDateError.
     """
-    start_dates_disabled = settings.FEATURES['DISABLE_START_DATES']
+    start_dates_disabled = settings.FEATURES.get('DISABLE_START_DATES', False)
     masquerading_as_student = is_masquerading_as_student(user, course_key)
 
     if start_dates_disabled and not masquerading_as_student:
