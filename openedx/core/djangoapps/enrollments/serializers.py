@@ -85,14 +85,14 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
     the Course Descriptor and course modes, to give a complete representation of course enrollment.
 
     """
-    course_details = CourseSerializer(source="course_overview")
-    user = serializers.SerializerMethodField("get_username")
+    course_details = CourseSerializer(source='course_overview')
+    user = serializers.SerializerMethodField('get_username')
 
     def get_username(self, model):
         """Retrieves the username from the associated model."""
         return model.username
 
-    class Meta(object):
+    class Meta:
         model = CourseEnrollment
         fields = ('created', 'mode', 'is_active', 'course_details', 'user')
         lookup_field = 'username'
@@ -113,6 +113,9 @@ class CourseEnrollmentsApiListSerializer(CourseEnrollmentSerializer):
         self.fields.pop('course_details')
 
     def _get_course_grade(self, model):
+        """
+        Cache and store the query for course grade.
+        """
         if self.course_grade == None:
             course = modulestore().get_course(model.course_id)
             if course:
