@@ -116,7 +116,7 @@ class CourseEnrollmentsApiListSerializer(CourseEnrollmentSerializer):
         """
         Cache and store the query for course grade.
         """
-        if self.course_grade == None:
+        if self.course_grade is None:
             course = modulestore().get_course(model.course_id)
             if course:
                 try:
@@ -141,13 +141,13 @@ class CourseEnrollmentsApiListSerializer(CourseEnrollmentSerializer):
         course_grade = self._get_course_grade(model)
         if course_grade:
             current_grade = int(course_grade.percent * 100)
-            for section in course_grade.summary.get(u'section_breakdown'):
-                if section.get(u'prominent'):
+            for section in course_grade.summary.get('section_breakdown'):
+                if section.get('prominent'):
                     summary.append(section)
         return [
-            {u'current_grade': current_grade,
-             u'certificate_eligible': course_grade.passed if course_grade else False,
-             u'summary': summary}
+            {'current_grade': current_grade,
+             'certificate_eligible': course_grade.passed if course_grade else False,
+             'summary': summary}
         ]
 
     class Meta(CourseEnrollmentSerializer.Meta):

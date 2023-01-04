@@ -11,16 +11,12 @@ from crum import get_current_request
 from django.conf import settings
 from enterprise.models import EnterpriseCourseEnrollment, EnterpriseCustomerUser
 from pytz import UTC
-from xmodule.course_block import COURSE_VISIBILITY_PUBLIC
-from xmodule.util.xmodule_django import get_current_request_hostname
 
 from common.djangoapps.student.models import CourseEnrollment
 from common.djangoapps.student.roles import CourseBetaTesterRole
 from lms.djangoapps.courseware.access_response import (
     AccessResponse,
     AuthenticationRequiredAccessError,
-    EnrollmentRequiredAccessError,
-    StartDateError,
     DataSharingConsentRequiredAccessError,
     EnrollmentRequiredAccessError,
     IncorrectActiveEnterpriseAccessError,
