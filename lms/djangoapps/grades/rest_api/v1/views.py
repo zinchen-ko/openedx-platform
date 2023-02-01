@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from django.core.exceptions import (  # lint-amnesty, pylint: disable=wrong-import-order
     ValidationError
 )
+from django.db.models import Q
 from common.djangoapps.student.models.course_enrollment import CourseEnrollment
 
 from edx_rest_framework_extensions import permissions
@@ -213,6 +214,7 @@ class CourseGradingPolicy(GradeViewMixin, ListAPIView):
         course = self._get_course(request, course_id)
         return Response(GradingPolicySerializer(course.raw_grader, many=True).data)
 
+
 class CourseGradingStatus(GradeViewMixin, PaginatedAPIView):
     """
     **Use Cases**
@@ -282,22 +284,25 @@ class CourseGradingStatus(GradeViewMixin, PaginatedAPIView):
         BearerAuthenticationAllowInactiveUser,
         SessionAuthenticationAllowInactiveUser,
     )
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsStaff,)
+    pagination_class = CourseEnrollmentPagination
 
-    def get(self, request, course_id, username, *args, **kwargs):  # pylint: disable=arguments-differ
+    def get(self, request, course_id=None, username=None, *args, **kwargs):  # pylint: disable=arguments-differ
+        course_grading_status = []
         form = CourseEnrollmentsApiListForm(self.request.query_params)
-
         if not form.is_valid():
             raise ValidationError(form.errors)
-
         query_course_id = form.cleaned_data.get('course_id')
         usernames = form.cleaned_data.get('username')
-        # Use the above parameters to create filter over enrollment.
-        course_grading_status = []
+        username_filter = None
         course_enrollments = CourseEnrollment.objects.all()
+        if query_course_id:
+            course_enrollments = course_enrollments.filter(course_id=query_course_id)
+        if usernames:
+            username_filter = [Q(user__username__in=usernames)]
         for course_enrollment in course_enrollments:
             course_key = course_enrollment.course_overview.id
-            users = self._paginate_users(course_key)
+            users = self._paginate_users(course_key, course_enrollment_filter=username_filter)
             with bulk_course_grade_context(course_key, users):
                 for user, course_grade, exc in CourseGradeFactory().iter(users, course_key=course_key):
                     if not exc:
