@@ -3,11 +3,16 @@
 
 import logging
 from contextlib import contextmanager
+from django.core.exceptions import (  # lint-amnesty, pylint: disable=wrong-import-order
+    ValidationError
+)
+from common.djangoapps.student.models.course_enrollment import CourseEnrollment
 
 from edx_rest_framework_extensions import permissions
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
 from opaque_keys import InvalidKeyError
+from openedx.core.djangoapps.enrollments.forms import CourseEnrollmentsApiListForm
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
@@ -207,3 +212,94 @@ class CourseGradingPolicy(GradeViewMixin, ListAPIView):
     def get(self, request, course_id, *args, **kwargs):  # pylint: disable=arguments-differ
         course = self._get_course(request, course_id)
         return Response(GradingPolicySerializer(course.raw_grader, many=True).data)
+
+class CourseGradingStatus(GradeViewMixin, PaginatedAPIView):
+    """
+    **Use Cases**
+
+        Get a list of all course grade status, optionally filtered by a course ID or list of usernames.
+
+    **Example Requests**
+
+        GET /api/grades/v1/course_status
+
+        GET /api/grades/v1/course_status?course_id={course_id}
+
+        GET /api/grades/v1/course_status?username={username},{username},{username}
+
+        GET /api/grades/v1/course_status?course_id={course_id}&username={username}
+
+    **Query Parameters for GET**
+
+        * course_id: Filters the result to course grade status for the course corresponding to the
+            given course ID. The value must be URL encoded. Optional.
+
+        * username: List of comma-separated usernames. Filters the result to the course grade status
+            of the given users. Optional.
+
+        * page_size: Number of results to return per page. Optional.
+
+        * page: Page number to retrieve. Optional.
+
+    **Response Values**
+
+        If the request for information about the course grade status is successful, an HTTP 200 "OK" response
+        is returned.
+
+        The HTTP 200 response has the following values.
+
+        * results: A list of the course grading status matching the request.
+
+            * course_id: Course ID of the course in the course grading status.
+
+            * user: Username of the user in the course enrollment.
+
+            * passed: Boolean flag for user passing the course.
+
+            * grading_status: Have various infomation about the course grading
+                            status like certificate_eligibility, section_breakdown,
+                            current_grade.
+
+        * next: The URL to the next page of results, or null if this is the
+            last page.
+
+        * previous: The URL to the next page of results, or null if this
+            is the first page.
+
+        If the user is not logged in, a 401 error is returned.
+
+        If the user is not global staff, a 403 error is returned.
+
+        If the specified course_id is not valid or any of the specified usernames
+        are not valid, a 400 error is returned.
+
+        If the specified course_id does not correspond to a valid course or if all the specified
+        usernames do not correspond to valid users, an HTTP 200 "OK" response is returned with an
+        empty 'results' field.
+    """
+    authentication_classes = (
+        JwtAuthentication,
+        BearerAuthenticationAllowInactiveUser,
+        SessionAuthenticationAllowInactiveUser,
+    )
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get(self, request, course_id, username, *args, **kwargs):  # pylint: disable=arguments-differ
+        form = CourseEnrollmentsApiListForm(self.request.query_params)
+
+        if not form.is_valid():
+            raise ValidationError(form.errors)
+
+        query_course_id = form.cleaned_data.get('course_id')
+        usernames = form.cleaned_data.get('username')
+        # Use the above parameters to create filter over enrollment.
+        course_grading_status = []
+        course_enrollments = CourseEnrollment.objects.all()
+        for course_enrollment in course_enrollments:
+            course_key = course_enrollment.course_overview.id
+            users = self._paginate_users(course_key)
+            with bulk_course_grade_context(course_key, users):
+                for user, course_grade, exc in CourseGradeFactory().iter(users, course_key=course_key):
+                    if not exc:
+                        course_grading_status.append(self._serialize_course_grading_status(user, course_key, course_grade))
+        return self.get_paginated_response(course_grading_status)

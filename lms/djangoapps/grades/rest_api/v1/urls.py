@@ -44,4 +44,5 @@ urlpatterns = [
         gradebook_views.SubsectionGradeView.as_view(),
         name='course_grade_overrides'
     ),
+    re_path(r'^course_status/?$', views.CourseGradingStatus.as_view(), name='course_grade_status'),
 ]

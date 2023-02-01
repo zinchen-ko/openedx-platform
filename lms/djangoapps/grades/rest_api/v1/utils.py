@@ -177,6 +177,27 @@ class GradeViewMixin(DeveloperErrorViewMixin):
             'letter_grade': course_grade.letter_grade,
         }
 
+    def _serialize_course_grading_status(self, user, course_key, course_grade):
+        """
+        Serialize a single grade to dict to use in Responses
+        """
+        summary = []
+        for section in course_grade.summary.get('section_breakdown'):
+                if section.get('prominent'):
+                    summary.append(section)
+        grading = {
+            'current_grade': int(course_grade.percent * 100),
+            'certificate_eligible': course_grade.passed,
+            'section_breakdown': summary,
+        }
+        course_grading_status = {
+            'course_id': str(course_key),
+            'username': user.username,
+            'passed': course_grade.passed,
+        }
+        course_grading_status['grading_status'] = grading
+        return course_grading_status
+
     def perform_authentication(self, request):
         """
         Ensures that the user is authenticated (e.g. not an AnonymousUser).
