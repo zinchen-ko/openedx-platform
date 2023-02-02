@@ -49,7 +49,7 @@ urlpatterns = [
         views.CourseGradingStatus.as_view(),
         name='course_grade_status'
     ),
-    path(
+    re_path(
         r'^submission_history$',
         views.SubmissionHistoryView.as_view(),
         name='submissionhistory'

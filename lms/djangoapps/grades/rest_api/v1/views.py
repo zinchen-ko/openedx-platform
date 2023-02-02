@@ -335,7 +335,7 @@ class CourseGradingStatus(GradeViewMixin, PaginatedAPIView):
 
 
 @can_disable_rate_limit
-class SubmissionHistoryView(APIView, ApiKeyPermissionMixIn):
+class SubmissionHistoryView(GradeViewMixin, PaginatedAPIView, ApiKeyPermissionMixIn):
     """
     Submission history view.
     """
@@ -359,9 +359,9 @@ class SubmissionHistoryView(APIView, ApiKeyPermissionMixIn):
 
         **Example Requests**:
 
-            GET /api/enrollment/v1/submission_history?course_id=course_id
-            GET /api/enrollment/v1/submission_history?course_id=course_id&user=username
-            GET /api/enrollment/v1/submission_history?course_id=course_id&all_users=true
+            GET /api/grades/v1/submission_history?course_id=course_id
+            GET /api/grades/v1/submission_history?course_id=course_id&user=username
+            GET /api/grades/v1/submission_history?course_id=course_id&all_users=true
 
         **Query Parameters for GET**
 
