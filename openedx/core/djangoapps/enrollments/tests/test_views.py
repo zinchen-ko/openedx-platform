@@ -452,8 +452,8 @@ class EnrollmentTest(EnrollmentTestMixin, ModuleStoreTestCase, APITestCase, Ente
                 mode_display_name=CourseMode.DEFAULT_MODE_SLUG,
             )
             self.assert_enrollment_status(
-                    course_id=str(course.id),
-                    max_mongo_calls=0,
+                course_id=str(course.id),
+                max_mongo_calls=0,
             )
         # Verify the user himself can see both of his enrollments.
         self._assert_enrollments_visible_in_list([self.course, other_course])
