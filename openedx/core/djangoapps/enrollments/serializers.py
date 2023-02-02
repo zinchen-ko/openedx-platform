@@ -104,54 +104,13 @@ class CourseEnrollmentsApiListSerializer(CourseEnrollmentSerializer):
     by the CourseEnrollmentSerializer.
     """
     course_id = serializers.CharField(source='course_overview.id')
-    finished = serializers.SerializerMethodField()
-    grading = serializers.SerializerMethodField()
-    course_grade = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields.pop('course_details')
 
-    def _get_course_grade(self, model):
-        """
-        Cache and store the query for course grade.
-        """
-        if self.course_grade is None:
-            course = modulestore().get_course(model.course_id)
-            if course:
-                try:
-                    self.course_grade = CourseGradeFactory().read(model.user, course)
-                except PermissionDenied:
-                    self.course_grade = False
-            else:
-                self.course_grade = False
-        return self.course_grade
-
-    def get_finished(self, model):
-        """Retrieve finished course."""
-        course_grade = self._get_course_grade(model)
-        if course_grade:
-            course_grade = course_grade.passed
-        return course_grade
-
-    def get_grading(self, model):
-        """Retrieve course grade."""
-        summary = []
-        current_grade = 0
-        course_grade = self._get_course_grade(model)
-        if course_grade:
-            current_grade = int(course_grade.percent * 100)
-            for section in course_grade.summary.get('section_breakdown'):
-                if section.get('prominent'):
-                    summary.append(section)
-        return [
-            {'current_grade': current_grade,
-             'certificate_eligible': course_grade.passed if course_grade else False,
-             'summary': summary}
-        ]
-
     class Meta(CourseEnrollmentSerializer.Meta):
-        fields = CourseEnrollmentSerializer.Meta.fields + ('course_id', 'finished', 'grading')
+        fields = CourseEnrollmentSerializer.Meta.fields + ('course_id', )
 
 
 class ModeSerializer(serializers.Serializer):  # pylint: disable=abstract-method
