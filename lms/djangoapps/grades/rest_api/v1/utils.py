@@ -179,12 +179,12 @@ class GradeViewMixin(DeveloperErrorViewMixin):
 
     def _serialize_course_grading_status(self, user, course_key, course_grade):
         """
-        Serialize a single grade to dict to use in Responses
+        Serialize a single grade to dict to use in Responses.
         """
         summary = []
         for section in course_grade.summary.get('section_breakdown'):
-                if section.get('prominent'):
-                    summary.append(section)
+            if section.get('prominent'):
+                summary.append(section)
         grading = {
             'current_grade': int(course_grade.percent * 100),
             'certificate_eligible': course_grade.passed,

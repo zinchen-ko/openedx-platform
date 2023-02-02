@@ -3,25 +3,23 @@
 
 import logging
 from contextlib import contextmanager
-from django.core.exceptions import (  # lint-amnesty, pylint: disable=wrong-import-order
-    ValidationError
-)
-from django.db.models import Q
-from common.djangoapps.student.models.course_enrollment import CourseEnrollment
 
+from django.core.exceptions import ValidationError  # lint-amnesty, pylint: disable=wrong-import-order
+from django.db.models import Q
 from edx_rest_framework_extensions import permissions
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
 from opaque_keys import InvalidKeyError
-from openedx.core.djangoapps.enrollments.forms import CourseEnrollmentsApiListForm
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
+from common.djangoapps.student.models.course_enrollment import CourseEnrollment
 from lms.djangoapps.courseware.access import has_access
 from lms.djangoapps.grades.api import CourseGradeFactory, clear_prefetched_course_grades, prefetch_course_grades
 from lms.djangoapps.grades.rest_api.serializers import GradingPolicySerializer
 from lms.djangoapps.grades.rest_api.v1.utils import CourseEnrollmentPagination, GradeViewMixin
+from openedx.core.djangoapps.enrollments.forms import CourseEnrollmentsApiListForm
 from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
 from openedx.core.lib.api.view_utils import PaginatedAPIView, get_course_key, verify_course_exists
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
@@ -241,8 +239,6 @@ class CourseGradingStatus(GradeViewMixin, PaginatedAPIView):
 
         * page_size: Number of results to return per page. Optional.
 
-        * page: Page number to retrieve. Optional.
-
     **Response Values**
 
         If the request for information about the course grade status is successful, an HTTP 200 "OK" response
@@ -279,6 +275,7 @@ class CourseGradingStatus(GradeViewMixin, PaginatedAPIView):
         usernames do not correspond to valid users, an HTTP 200 "OK" response is returned with an
         empty 'results' field.
     """
+
     authentication_classes = (
         JwtAuthentication,
         BearerAuthenticationAllowInactiveUser,
@@ -289,22 +286,42 @@ class CourseGradingStatus(GradeViewMixin, PaginatedAPIView):
 
     def get(self, request, course_id=None, username=None, *args, **kwargs):  # pylint: disable=arguments-differ
         course_grading_status = []
+        course_keys = []
+        username_filter = None
+
         form = CourseEnrollmentsApiListForm(self.request.query_params)
         if not form.is_valid():
             raise ValidationError(form.errors)
-        query_course_id = form.cleaned_data.get('course_id')
         usernames = form.cleaned_data.get('username')
-        username_filter = None
-        course_enrollments = CourseEnrollment.objects.all()
-        if query_course_id:
-            course_enrollments = course_enrollments.filter(course_id=query_course_id)
+
+        if self.request.query_params.get('course_id'):
+            try:
+                course_keys.append(get_course_key(request, course_id))
+            except InvalidKeyError:
+                raise self.api_error(  # lint-amnesty, pylint: disable=raise-missing-from
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    developer_message='The provided course key cannot be parsed.',
+                    error_code='invalid_course_key'
+                )
+        else:
+            course_keys = self._get_enrollment_course_keys()
         if usernames:
             username_filter = [Q(user__username__in=usernames)]
-        for course_enrollment in course_enrollments:
-            course_key = course_enrollment.course_overview.id
+        for course_key in course_keys:
             users = self._paginate_users(course_key, course_enrollment_filter=username_filter)
             with bulk_course_grade_context(course_key, users):
                 for user, course_grade, exc in CourseGradeFactory().iter(users, course_key=course_key):
                     if not exc:
-                        course_grading_status.append(self._serialize_course_grading_status(user, course_key, course_grade))
+                        course_grading_status.append(
+                            self._serialize_course_grading_status(user, course_key, course_grade)
+                        )
         return self.get_paginated_response(course_grading_status)
+
+    def _get_enrollment_course_keys(self):
+        """ Returns all unique course_keys for enrollments.
+        """
+        unique_course_string_map = {}
+        course_ids = CourseEnrollment.objects.select_related('course').all().values_list('course_id', flat=True)
+        for course_id in course_ids:
+            unique_course_string_map[str(course_id)] = course_id
+        return list(unique_course_string_map.values())
