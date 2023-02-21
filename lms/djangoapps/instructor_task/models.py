@@ -43,6 +43,7 @@ SCHEDULED = 'SCHEDULED'
 TASK_INPUT_LENGTH = 10000
 DEFAULT_STORAGE_BACKEND = 'storages.backends.s3boto.S3BotoStorage'
 
+
 class InstructorTask(models.Model):
     """
     Stores information about background tasks that have been submitted to
