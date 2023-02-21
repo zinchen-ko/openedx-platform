@@ -11,7 +11,7 @@ import boto3
 from botocore.exceptions import ClientError
 import socket
 from multiprocessing import Pool
-w
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
