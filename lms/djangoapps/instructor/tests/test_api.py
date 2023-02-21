@@ -14,6 +14,7 @@ import dateutil
 import ddt
 import pytest
 import pytz
+from botocore.exceptions import ClientError
 from boto.exception import BotoServerError
 from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
@@ -101,6 +102,7 @@ from openedx.core.lib.xblock_utils import grade_histogram
 from openedx.features.course_experience import RELATIVE_DATES_FLAG
 
 from .test_tools import msk_from_problem_urlname
+from ...instructor_task.models import DjangoStorageReportStore
 
 LOG_PATH = "lms.djangoapps.instructor.views.api"
 DATE_FIELD = Date()
@@ -2742,7 +2744,7 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
     @patch('lms.djangoapps.instructor_task.models.logger.error')
     @patch.dict(settings.GRADES_DOWNLOAD, {'STORAGE_TYPE': 's3', 'ROOT_PATH': 'tmp/edx-s3/grades'})
     @ddt.data('list_report_downloads', 'instructor_api_v1:list_report_downloads')
-    def test_list_report_downloads_error(self, endpoint, mock_error):
+    def test_list_report_downloads_error_boto(self, endpoint, mock_error):
         """
         Tests the Rate-Limit exceeded is handled and does not raise 500 error.
         """
@@ -2759,6 +2761,41 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
             self.course.id,
             ex_status,
             ex_reason,
+        )
+
+        res_json = json.loads(response.content.decode('utf-8'))
+        assert res_json == {'downloads': []}
+
+    @patch('lms.djangoapps.instructor_task.models.logger.error')
+    @patch.dict(settings.GRADES_DOWNLOAD, {'STORAGE_TYPE': 's3', 'ROOT_PATH': 'tmp/edx-s3/grades'})
+    @ddt.data('list_report_downloads', 'instructor_api_v1:list_report_downloads')
+    def test_list_report_downloads_error_boto3(self, endpoint, mock_error):
+        """
+        Tests the Rate-Limit exceeded is handled and does not raise 500 error.
+        """
+        error_response = {'Error': {'Code': 503, 'Message': 'error found'}}
+        operation_name = 'test'
+        url = reverse(endpoint, kwargs={'course_id': str(self.course.id)})
+        djsto = DjangoStorageReportStore(
+            storage_class='storages.backends.s3boto.S3BotoStorage',
+            storage_kwargs={'bucket': 'edx-grades', 'location': 'tmp/edx-s3/grades',
+                            'custom_domain': None, 'querystring_expire': 300, 'gzip': True
+                            }
+        )
+
+        with patch('lms.djangoapps.instructor_task.models.DjangoStorageReportStore') as mock_storage:
+            mock_storage.return_value = djsto
+            with patch('storages.backends.s3boto3.S3Boto3Storage.listdir', side_effect=ClientError(error_response, operation_name)):
+                if endpoint in INSTRUCTOR_GET_ENDPOINTS:
+                    response = self.client.get(url)
+                else:
+                    response = self.client.post(url, {})
+
+        mock_error.assert_called_with(
+            'Fetching files failed for course: %s, status: %s, reason: %s',
+            self.course.id,
+            error_response.get('Error'),
+            error_response.get('Error').get('Message'),
         )
 
         res_json = json.loads(response.content.decode('utf-8'))
