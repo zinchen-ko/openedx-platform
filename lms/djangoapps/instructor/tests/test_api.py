@@ -2776,20 +2776,12 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
         error_response = {'Error': {'Code': 503, 'Message': 'error found'}}
         operation_name = 'test'
         url = reverse(endpoint, kwargs={'course_id': str(self.course.id)})
-        djsto = DjangoStorageReportStore(
-            storage_class='storages.backends.s3boto.S3BotoStorage',
-            storage_kwargs={'bucket': 'edx-grades', 'location': 'tmp/edx-s3/grades',
-                            'custom_domain': None, 'querystring_expire': 300, 'gzip': True
-                            }
-        )
 
-        with patch('lms.djangoapps.instructor_task.models.DjangoStorageReportStore') as mock_storage:
-            mock_storage.return_value = djsto
-            with patch('storages.backends.s3boto3.S3Boto3Storage.listdir', side_effect=ClientError(error_response, operation_name)):
-                if endpoint in INSTRUCTOR_GET_ENDPOINTS:
-                    response = self.client.get(url)
-                else:
-                    response = self.client.post(url, {})
+        with patch('storages.backends.s3boto3.S3Boto3Storage.listdir', side_effect=ClientError(error_response, operation_name)):
+            if endpoint in INSTRUCTOR_GET_ENDPOINTS:
+                response = self.client.get(url)
+            else:
+                response = self.client.post(url, {})
 
         mock_error.assert_called_with(
             'Fetching files failed for course: %s, status: %s, reason: %s',
