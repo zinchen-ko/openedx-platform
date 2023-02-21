@@ -41,7 +41,7 @@ QUEUING = 'QUEUING'
 PROGRESS = 'PROGRESS'
 SCHEDULED = 'SCHEDULED'
 TASK_INPUT_LENGTH = 10000
-
+DEFAULT_STORAGE_BACKEND = 'storages.backends.s3boto.S3BotoStorage'
 
 class InstructorTask(models.Model):
     """
@@ -231,7 +231,7 @@ class ReportStore:
         storage_type = config.get('STORAGE_TYPE', '').lower()
         if storage_type == 's3':
             return DjangoStorageReportStore(
-                storage_class='storages.backends.s3boto.S3BotoStorage',
+                storage_class=DEFAULT_STORAGE_BACKEND,
                 storage_kwargs={
                     'bucket': config['BUCKET'],
                     'location': config['ROOT_PATH'],
@@ -332,8 +332,6 @@ class DjangoStorageReportStore(ReportStore):
             # dir does not exist; other storage types return an empty list.
             return []
         except BotoServerError as ex:
-            import pdb;
-            pdb.set_trace()
             logger.error(
                 'Fetching files failed for course: %s, status: %s, reason: %s',
                 course_id,
