@@ -2766,7 +2766,7 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
         assert res_json == {'downloads': []}
 
     @patch('lms.djangoapps.instructor_task.models.logger.error')
-    @patch('lms.djangoapps.instructor_task.models.DEFAULT_STORAGE_BACKEND', 'storages.backends.s3boto3.S3Boto3Storage')
+    @patch('lms.djangoapps.instructor_task.models.DJANGO_STORE_STORAGE_CLASS', 'storages.backends.s3boto3.S3Boto3Storage')
     @patch.dict(settings.GRADES_DOWNLOAD, {'STORAGE_TYPE': 's3', 'ROOT_PATH': 'tmp/edx-s3/grades'})
     @ddt.data('list_report_downloads', 'instructor_api_v1:list_report_downloads')
     def test_list_report_downloads_error_boto3(self, endpoint, mock_error):
@@ -2778,7 +2778,7 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
         url = reverse(endpoint, kwargs={'course_id': str(self.course.id)})
 
         with patch(
-            'storages.backends.s3boto3.S3Boto3Storage.listdir', 
+            'storages.backends.s3boto3.S3Boto3Storage.listdir',
             side_effect=ClientError(error_response, operation_name)
             ):
             if endpoint in INSTRUCTOR_GET_ENDPOINTS:

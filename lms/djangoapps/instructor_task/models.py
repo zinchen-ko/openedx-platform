@@ -41,7 +41,7 @@ QUEUING = 'QUEUING'
 PROGRESS = 'PROGRESS'
 SCHEDULED = 'SCHEDULED'
 TASK_INPUT_LENGTH = 10000
-DEFAULT_STORAGE_BACKEND = 'storages.backends.s3boto.S3BotoStorage'
+DJANGO_STORE_STORAGE_CLASS = 'storages.backends.s3boto.S3BotoStorage'
 
 
 class InstructorTask(models.Model):
@@ -232,7 +232,7 @@ class ReportStore:
         storage_type = config.get('STORAGE_TYPE', '').lower()
         if storage_type == 's3':
             return DjangoStorageReportStore(
-                storage_class=DEFAULT_STORAGE_BACKEND,
+                storage_class=DJANGO_STORE_STORAGE_CLASS,
                 storage_kwargs={
                     'bucket': config['BUCKET'],
                     'location': config['ROOT_PATH'],
