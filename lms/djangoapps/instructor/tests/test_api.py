@@ -102,7 +102,6 @@ from openedx.core.lib.xblock_utils import grade_histogram
 from openedx.features.course_experience import RELATIVE_DATES_FLAG
 
 from .test_tools import msk_from_problem_urlname
-from ...instructor_task.models import DjangoStorageReportStore
 
 LOG_PATH = "lms.djangoapps.instructor.views.api"
 DATE_FIELD = Date()
@@ -2778,7 +2777,10 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
         operation_name = 'test'
         url = reverse(endpoint, kwargs={'course_id': str(self.course.id)})
 
-        with patch('storages.backends.s3boto3.S3Boto3Storage.listdir', side_effect=ClientError(error_response, operation_name)):
+        with patch(
+            'storages.backends.s3boto3.S3Boto3Storage.listdir', 
+            side_effect=ClientError(error_response, operation_name)
+            ):
             if endpoint in INSTRUCTOR_GET_ENDPOINTS:
                 response = self.client.get(url)
             else:
