@@ -20,7 +20,6 @@ import os.path
 from uuid import uuid4
 
 from boto.exception import BotoServerError
-from botocore.exceptions import ClientError
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
@@ -340,11 +339,11 @@ class DjangoStorageReportStore(ReportStore):
                 ex.reason
             )
             return []
-        except ClientError as ex:
+        except Exception as ex:
             logger.error(
-                'Fetching files failed for course: %s, status: %s, reason: %s',
+                'Fetching files failed for course: %s, reason: %s',
                 course_id,
-                ex.response.get('Error'), ex.response.get('Error').get('Message')
+                str(ex)
             )
             return []
         files = [(filename, os.path.join(course_dir, filename)) for filename in filenames]

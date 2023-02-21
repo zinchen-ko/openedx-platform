@@ -14,7 +14,6 @@ import dateutil
 import ddt
 import pytest
 import pytz
-from botocore.exceptions import ClientError
 from boto.exception import BotoServerError
 from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
@@ -2773,23 +2772,19 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
         """
         Tests the Rate-Limit exceeded is handled and does not raise 500 error.
         """
-        error_response = {'Error': {'Code': 503, 'Message': 'error found'}}
-        operation_name = 'test'
+        error = 'error appeared'
         url = reverse(endpoint, kwargs={'course_id': str(self.course.id)})
 
-        with patch(
-            'storages.backends.s3boto3.S3Boto3Storage.listdir',
-            side_effect=ClientError(error_response, operation_name)
-            ):
+        with patch('storages.backends.s3boto3.S3Boto3Storage.listdir', side_effect=Exception(error)):
             if endpoint in INSTRUCTOR_GET_ENDPOINTS:
                 response = self.client.get(url)
             else:
                 response = self.client.post(url, {})
+
         mock_error.assert_called_with(
-            'Fetching files failed for course: %s, status: %s, reason: %s',
+            'Fetching files failed for course: %s, reason: %s',
             self.course.id,
-            error_response.get('Error'),
-            error_response.get('Error').get('Message'),
+            error
         )
 
         res_json = json.loads(response.content.decode('utf-8'))
