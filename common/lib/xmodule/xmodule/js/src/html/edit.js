@@ -100,7 +100,7 @@
           script_url: baseUrl + "js/vendor/tinymce/js/tinymce/tinymce.full.min.js",
           font_formats: _getFonts(),
           theme: "silver",
-          skin: "studio-tmce5",
+          skin: "tinymce-5",
           schema: "html5",
           entity_encoding: "raw",
 
