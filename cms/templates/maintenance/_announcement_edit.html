@@ -45,10 +45,11 @@ from openedx.core.djangolib.markup import HTML, Text
               "insertdatetime media table contextmenu paste",
               "autoresize autosave codesample directionality",
               "emoticons fullscreen help importcss nonbreaking",
-              "pagebreak preview quickbars save searchreplace",
-              "template visualchars wordcount"
+              "pagebreak preview quickbars save template visualchars wordcount"
           ],
-          toolbar: "undo redo styleselect bold italic alignleft aligncenter alignright alignjustify bullist numlist outdent indent link image"
+          toolbar: "undo redo styleselect bold italic alignleft aligncenter alignright alignjustify bullist numlist outdent " +
+              "indent link image wordcount save emoticons fullscreen help importcss nonbreaking pagebreak preview quickbars save searchreplace" +
+              "autoresize autosave codesample directionality"
       });
   </script>
 </%block>
