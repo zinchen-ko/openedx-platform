@@ -33,24 +33,18 @@ from openedx.core.djangolib.markup import HTML, Text
 
 <%block name="header_extras">
   <script src="${STATIC_URL}js/vendor/tinymce/js/tinymce/tinymce.full.min.js"></script>
-  <script type="text/javascript">
-      tinymce.init({
-          selector: "#id_content",
-          height: 450,
-          skin: "tinymce-5",
-          branding: false,
-          plugins: [
-              "advlist autolink lists link image charmap print anchor",
-              "searchreplace visualblocks code",
-              "insertdatetime media table contextmenu paste",
-              "autoresize autosave codesample directionality",
-              "emoticons fullscreen help importcss nonbreaking",
-              "pagebreak preview quickbars save template visualchars wordcount"
-          ],
-          toolbar: "table tabledelete | tableprops tablerowprops tablecellprops | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol"
-          // toolbar: "undo redo styleselect bold italic alignleft aligncenter alignright alignjustify bullist numlist outdent contextmenu " +
-          //     "indent link image wordcount save emoticons fullscreen help importcss nonbreaking table pagebreak preview quickbars searchreplace visualchars " +
-          //     "autoresize autosave codesample directionality advlist autolink lists charmap print anchor visualblocks code paste media insertdatetime template"
-      });
-  </script>
+<script type="text/javascript">
+    tinymce.init({
+        selector: "#id_content",
+        height: 450,
+        skin: "tinymce-5",
+        branding: false,
+        plugins: [
+            "advlist autolink lists link image charmap print anchor",
+            "searchreplace visualblocks code",
+            "insertdatetime media table contextmenu paste"
+        ],
+        toolbar: "undo redo styleselect bold italic alignleft aligncenter alignright alignjustify bullist numlist outdent indent link image"
+    });
+</script>
 </%block>
