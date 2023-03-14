@@ -129,20 +129,40 @@
           Disable visual aid on borderless table.
            */
           visual: false,
-          plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons codemirror tiny_mce_wiris',
+          plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons codemirror equation-editor',
           codemirror: {
             path: baseUrl + "js/vendor",
             disableFilesMerge: true,
             jsFiles: ["codemirror-compressed.js"],
             cssFiles: ["CodeMirror/codemirror.css"]
           },
-
+          equation_editor_config: {
+            url: 'editor/equation_editor.html', // URL of equation editor Page
+            origin: document.location.origin,
+            title: 'Equation Editor',
+            space_after_content: '&nbsp;',
+            btn_cancel_text: 'Cancel',
+            btn_ok_text: 'Insert',
+            mathlive_config: {
+                smartMode: true,
+            },
+        },
+        equation_editor_group: 'basic',
+        equation_editor_button_groups: {
+            basic: [
+                {
+                    name: 'Numbers',
+                    buttons: '1 2 3 4 \\pm \\dot',
+                },
+            ],
+        },
+        equation_editor_button_bar: '1 2 3 4 \\pm \\dot',
           image_advtab: true,
 
           /*
           We may want to add "styleselect" when we collect all styles used throughout the LMS
            */
-          toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl | tiny_mce_wiris_formulaEditor tiny_mce_wiris_formulaEditorChemistry',
+          toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl | equation-editor',
           block_formats: edx.StringUtils.interpolate(
             gettext("{paragraph}=p;{preformatted}=pre;{heading3}=h3;{heading4}=h4;{heading5}=h5;{heading6}=h6"),
             {
@@ -166,7 +186,7 @@
             },
             format: {
               title: 'Format',
-              items: 'bold italic underline strikethrough superscript subscript codeformat | styles blocks fontfamily fontsize align lineheight | forecolor backcolor | removeformat'
+              items: 'bold italic underline strikethrough superscript subscript codeformat | blocks fontfamily fontsize align lineheight | forecolor backcolor | removeformat'
             },
             tools: {title: 'Tools', items: 'wordcount'},
             table: {title: 'Table', items: 'inserttable | cell row column | tableprops deletetable'},
